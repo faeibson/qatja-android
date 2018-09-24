@@ -29,7 +29,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.HashSet;
 
 import se.wetcat.qatja.MQTTException;
@@ -171,7 +170,7 @@ public class QatjaService extends Service {
 
   private boolean doAutomaticReconnect = false;
   private Handler reconnectHandler = new Handler();
-  private Runnable recoonectRunnable = new Runnable() {
+  private Runnable reconnectRunnable = new Runnable() {
     @Override
     public void run() {
       connect();
@@ -421,8 +420,6 @@ public class QatjaService extends Service {
     MQTTSubscribe subscribe = MQTTSubscribe.newInstance(topics, qoss, id);
     sendMessage(subscribe);
 
-    subscribedTopics.addAll(Arrays.asList(topics));
-
     mMqttIdentifierHelper.addSentPackage(subscribe);
   }
 
@@ -576,7 +573,7 @@ public class QatjaService extends Service {
    * Attempt to reconnect after {@link #RECONNECT_TIMER} milliseconds
    */
   public void reconnect() {
-    reconnectHandler.postDelayed(recoonectRunnable, RECONNECT_TIMER);
+    reconnectHandler.postDelayed(reconnectRunnable, RECONNECT_TIMER);
   }
 
   /**
@@ -585,7 +582,7 @@ public class QatjaService extends Service {
    * @param milliseconds the delay
    */
   public void reconnect(long milliseconds) {
-    reconnectHandler.postDelayed(recoonectRunnable, milliseconds);
+    reconnectHandler.postDelayed(reconnectRunnable, milliseconds);
   }
 
   /**
@@ -868,6 +865,7 @@ public class QatjaService extends Service {
           case SUBSCRIBE_SUCCESS_AT_LEAST_ONCE:
           case SUBSCRIBE_SUCCESS_EXACTLY_ONCE:
             Log.d(TAG, "Success subscribing to " + topicFilters[i]);
+            subscribedTopics.add(topicFilters[i]);
             break;
 
           case SUBSCRIBE_FAILURE:
@@ -882,6 +880,7 @@ public class QatjaService extends Service {
       String[] topicFilters = unsubscribe.getTopicFilters();
       for (int i = 0; i < topicFilters.length; i++) {
         Log.d(TAG, "Success unsubscribing to " + topicFilters[i]);
+        subscribedTopics.remove(topicFilters[i]);
       }
     }
 
